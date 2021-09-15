@@ -15,6 +15,9 @@ module Faker
     BRAZILIAN_ID_FORMAT = /(\d{1,2})(\d{3})(\d{3})([\dX])/.freeze
     BRAZILIAN_ID_FROM = 10_000_000
     BRAZILIAN_ID_TO = 99_999_999
+    ANATEL_ID_FORMAT = /(\d{5})([\dX])/.freeze
+    ANATEL_ID_FROM = 00000
+    ANATEL_ID_TO = 99999
 
     CHILEAN_MODULO = 11
 
@@ -184,6 +187,17 @@ module Faker
 
       alias brazilian_rg brazilian_id
 
+      def anatel_id(legacy_formatted = NOT_GIVEN, formatted: false)
+        warn_for_deprecated_arguments do |keywords|
+          keywords << :formatted if legacy_formatted != NOT_GIVEN
+        end
+
+        digits = Faker::Number.between(to: ANATEL_ID_FROM, from: ANATEL_ID_TO).to_s
+        check_digit = anatel_id_checksum_digit(digits)
+        number = [digits, check_digit].join
+        formatted ? format('%s.%s.%s-%s', *number.scan(ANATEL_ID_FORMAT).flatten) : number
+      end
+
       ##
       # Produces a random Chilean ID (Rut with 8 digits).
       #
@@ -280,6 +294,11 @@ module Faker
       end
 
       def brazilian_id_checksum_digit(digits)
+        checksum = brazilian_document_checksum(digits)
+        brazilian_document_digit(checksum, id: true)
+      end
+      
+      def anatel_id_checksum_digit(digits)
         checksum = brazilian_document_checksum(digits)
         brazilian_document_digit(checksum, id: true)
       end
